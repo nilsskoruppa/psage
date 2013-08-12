@@ -39,11 +39,11 @@ def __check_jac_params( k, m, kind):
     m = Integer(m)
 
     if m <= 0:
-        raise ValueError, "index %s: must be a positive integer" % str(m)
+        raise ValueError, "index %s: must be a positive integer" % m
 
     if kind != 'holomorphic' and kind != 'skew_holomorphic':
         raise ValueError, "kind %s: must be %s or %s" \
-              % ( str(kind), 'holomorphic', 'skew_holomorphic')
+              % ( kind, 'holomorphic', 'skew_holomorphic')
 
     return k, m, Integer(-1) if 'holomorphic' == kind else Integer(+1)
  

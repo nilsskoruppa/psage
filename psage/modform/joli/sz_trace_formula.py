@@ -160,15 +160,15 @@ def __check( k, m, l, n):
     n = Integer(n)
 
     if m <= 0:
-        raise ValueError, "%s: m must be a positive integer" % str(m)
+        raise ValueError, "%s: m must be a positive integer" % m
 
     if l < 1 or 1 != l.gcd( m):
         raise ValueError, "%s: l must be a positive integer prime to %d" \
-              % ( str(l), m)
+              % ( l, m)
 
     if n <=0 or 0 != m%n or 1 != n.gcd( m//n):
         raise ValueError, "%s: n must be an exact divisor of %d" \
-              (str(n), m)
+              ( n, m)
 
     return k, m, l, n
 
