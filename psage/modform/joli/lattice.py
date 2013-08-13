@@ -13,7 +13,7 @@ in the context of Jacobi forms of lattice index over $Q$.
 _VERSION = '$Id$'
 
 
-from psage.modules.finite_quadratic_modules import *
+from psage.modules.finite_quadratic_module import *
 
 # load '/home/nils/Sandbox/Articles/Present/Joli-I/Computations/lattice_data.sage'
 
@@ -263,15 +263,14 @@ class Lattice_class (SageObject):
             $\beta(r)+ \Z$ does only depend on $r+L$ if $r$ is a shadow vector,
             otherwise this is not necessarily true. Hence we return only
             shadow vectors here.
-         """
-#        assert self.is_even()
+        """
         if None == self.__values:
             self.__values = {}
             G = self.gram_matrix()
             l = self.shadow_level()
             R =  self.dual_vectors()
             if not self.is_even():
-                s = self.shadow_vector()
+                s = self.a_shadow_vector()
                 R = [s+r for r in R]
             for r in R:
                 N = Integer((r*G*r)*l/2)

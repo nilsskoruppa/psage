@@ -5,18 +5,18 @@
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 """
-Provides classes and various functions to do computations
-in the context of Jacobi forms of lattice index over $Q$.
+DIMENSION FORMULAS FOR JACOBI FORMS OF LATTICE INDEX OVER Q
 
-Copyright (C) Nils-Peter Skoruppa 2013
+Provides dimensions for spaces of Jacobi forms of lattice index over $Q$.
+
+REFERENCES
+    H. Boylan, N-P. Skoruppa, Jacobi forms of lattice index. I. Basic Theory
 """
 _VERSION = '$Id$'
 
 
-load '/home/nils/Sandbox/Devel/fqm-devel/cn_group/finite_quadratic_module.sage'
-load 'lattice_data.sage'
-load 'lattice.sage'
-
+from sage.rings.integer import Integer
+from sage.rings.qqbar import QQbar
 
 def dim_Jac( k, L, h):
     """
@@ -27,6 +27,8 @@ def dim_Jac( k, L, h):
        L -- an instance of Lattice_class
        h -- an integer
     """
+    h = Integer(h)
+    k = Integer(k)
     g = k - h/2
     try:
         g = Integer(g)
@@ -45,17 +47,17 @@ def dim_Jac( k, L, h):
         raise NotImplementedError( 'weight %d: not yet implemented'%k)
 
     # scalar term
-    scal = (L.det() + len(V2)*(-1)^(g+o_inv))*(k-n/2-1)/24
+    scal = (L.det() + len(V2) * (-1)**(g+o_inv)) * (k-n/2-1)/24
 
     # elliptic S-term
-    ell_S = (L.chi(2)*QQbar.zeta(4)^g).real()/4 + kronecker(12,2*g+2*n+1)/6
-    
+    ell_S = (L.chi(2) * QQbar.zeta(4)**g).real()/4 + QQ(Integer(12).kronecker(2*g+2*n+1))/6
+
     # elliptic R-term
-    ell_R = (L.chi(-3)*QQbar.zeta(24)^(n+2)*QQbar.zeta(6)^g).real()*(-1)^g/(3*QQbar(sqrt(3)))
+    ell_R = (L.chi(-3) * QQbar.zeta(24)**(n+2) * QQbar.zeta(6)**g).real() * (-1)**g/QQbar(27).sqrt()
     
     # parabolic term
-    B = lambda t: t-floor(t)-1/2
-    par = -sum(B(h/24-L.beta(x)) for x in V)/2
-    par -= (-1)^(g+o_inv) * sum(B(h/24-L.beta(x)) for x in V2)/2
-    
+    B = lambda t: t - t.floor() - QQ(1)/2
+    par = -sum( B(h/24-L.beta(x)) for x in V)/2
+    par -= (-1)**(g+o_inv) * sum(B(h/24-L.beta(x)) for x in V2)/2
+
     return Integer(scal + ell_S + ell_R + par)

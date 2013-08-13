@@ -18,7 +18,7 @@ from sage.matrix.constructor import matrix
 
 def LatticeIndex( x):
     """
-    Return an nstance of Lattice_class initialized by $x$.
+    Return an instance of Lattice_class initialized by $x$.
 
     INPUT
         x can be:
@@ -27,7 +27,7 @@ def LatticeIndex( x):
           of a Gram matrix above the diagonal read from left
           to right and top to bottom
         o a Gram matrix
-        o a string representing an integral lattice
+        o a string representing an integral lattice (see the code)
     """
     
     # x is a list of the entries of a Gram matrix above the diagonal
@@ -39,7 +39,8 @@ def LatticeIndex( x):
     # x is a Gram matrix
     try:
         n = x.nrows()
-        xl = [x[i,j] for i in range(n) for j in range(i,n)]
+        assert x == x.transpose()
+        xl = [x[i,j] for j in range(n) for i in range(j,n)]
         return Lattice_class( xl)
     except:
         pass
@@ -54,6 +55,19 @@ def LatticeIndex( x):
         G = matrix( ZZ, n, n, 2)
         for i in range(n-1):
             G[i,i+1] = G[i+1,i] = -1
+        return LatticeIndex( G)
+    except:
+        pass
+
+    try:
+        # B_n: o-o-...-o=>o
+        assert 'B_' == x[:2]
+        n = Integer( x[2:])
+        assert n >= 3
+        G = matrix( ZZ, n, n, 2)
+        for i in range(n-2):
+            G[i,i+1] = G[i+1,i] = -1
+        G[n-1,n-3] = G[n-3,n-1] = -1
         return LatticeIndex( G)
     except:
         pass
@@ -93,5 +107,18 @@ def LatticeIndex( x):
         return LatticeIndex( matrix( ZZ, n, n, 1))
     except:
         pass
+
+    # try:
+    #     # R^#(h): dual of a lattice spanned by the root system R
+    #     # rescaled by the Coxeter number h of R
+    #     y = x[:-5]
+    #     assert '^#(h)' == y
+    #     L = LatticeIndex( y)
+    #     G = L.gram_matrix()^-1
+    #     h = ???
+    #     return LatticeIndex( h*G)
+    # except:
+    #     pass
+
 
     raise NotImplementedError( '%s: not recognized as representing a lattice'%x)
