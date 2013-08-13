@@ -13,6 +13,7 @@ _VERSION = '$Id$'
 
 from lattice import Lattice_class
 from sage.rings.integer import Integer
+from sage.rings.integer_ring import IntegerRing
 from sage.matrix.constructor import matrix
 
 
@@ -27,9 +28,10 @@ def LatticeIndex( x):
           of a Gram matrix above the diagonal read from left
           to right and top to bottom
         o a Gram matrix
-        o a string representing an integral lattice (see the code)
+        o a string representing an integral lattice:
+          A_n, B_n, C_n, D_n, E_6, E_7, E_8, G_2, F_4, Z^n
     """
-    
+
     # x is a list of the entries of a Gram matrix above the diagonal
     try:
         return Lattice_class( x)
@@ -52,7 +54,7 @@ def LatticeIndex( x):
         assert 'A_' == x[:2]
         n = Integer( x[2:])
         assert n >= 1
-        G = matrix( ZZ, n, n, 2)
+        G = matrix( IntegerRing(), n, n, 2)
         for i in range(n-1):
             G[i,i+1] = G[i+1,i] = -1
         return LatticeIndex( G)
@@ -63,11 +65,25 @@ def LatticeIndex( x):
         # B_n: o-o-...-o=>o
         assert 'B_' == x[:2]
         n = Integer( x[2:])
-        assert n >= 3
-        G = matrix( ZZ, n, n, 2)
+        assert n >= 2
+        G = matrix( IntegerRing(), n, n, 2)
+        G[n-1,n-1] = 1
+        for i in range(n-1):
+            G[i,i+1] = G[i+1,i] = -1
+        return LatticeIndex( G)
+    except:
+        pass
+
+    try:
+        # C_n: o-o-...-o<=o
+        assert 'C_' == x[:2]
+        n = Integer( x[2:])
+        assert n >= 2
+        G = matrix( IntegerRing(), n, n, 2)
+        G[n-1,n-1] = 4
         for i in range(n-2):
             G[i,i+1] = G[i+1,i] = -1
-        G[n-1,n-3] = G[n-3,n-1] = -1
+        G[n-1,n-2] = G[n-2,n-1] = -2
         return LatticeIndex( G)
     except:
         pass
@@ -77,7 +93,7 @@ def LatticeIndex( x):
         assert 'D_' == x[:2]
         n = Integer( x[2:])
         assert n >= 3
-        G = matrix( ZZ, n, n, 2)
+        G = matrix( IntegerRing(), n, n, 2)
         for i in range(n-2):
             G[i,i+1] = G[i+1,i] = -1
         G[n-1,n-3] = G[n-3,n-1] = -1
@@ -92,7 +108,7 @@ def LatticeIndex( x):
         assert 'E_' == x[:2]
         n = Integer( x[2:])
         assert n in [6,7,8]
-        G = matrix( ZZ, n, n, 2)
+        G = matrix( IntegerRing(), n, n, 2)
         for i in range(n-2):
             G[i,i+1] = G[i+1,i] = -1
         G[n-1,2] = G[2,n-1] = -1
@@ -101,10 +117,31 @@ def LatticeIndex( x):
         pass
 
     try:
+        # F_4: o-o=>o-o
+        assert 'F_4' == x
+        n = 4
+        G = matrix( IntegerRing(), n, n, 4)
+        G[2,2] = G[3,3] = 2
+        G[0,1] = G[1,0] = -2
+        G[1,2] = G[2,1] = -2
+        G[2,3] = G[3,2] = -1
+        return LatticeIndex( G)
+    except:
+        pass
+
+    try:
+        # G_2: o<3o
+        assert 'G_2' == x
+        G = matrix( IntegerRing(), 2, 2, [2,-3,-3,6])
+        return LatticeIndex( G)
+    except:
+        pass
+
+    try:
         # Z^n
         assert 'Z^' == x[:2]
         n = Integer( x[2:]) 
-        return LatticeIndex( matrix( ZZ, n, n, 1))
+        return LatticeIndex( matrix( IntegerRing(), n, n, 1))
     except:
         pass
 
