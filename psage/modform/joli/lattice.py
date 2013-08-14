@@ -18,9 +18,10 @@ from psage.modules.finite_quadratic_module import FiniteQuadraticModule
 from sage.rings.integer import Integer
 from sage.rings.integer_ring import IntegerRing
 from sage.rings.arith import is_square, lcm
-from sage.misc.functional import isqrt
+from sage.misc.functional import isqrt, is_odd
 from sage.matrix.constructor import matrix, Matrix, vector
 from sage.rings.qqbar import QQbar
+from sage.misc.mrange import mrange
 
 
 class Lattice_class (SageObject):
@@ -129,7 +130,7 @@ class Lattice_class (SageObject):
     def is_even( self):
         I = self.gram_matrix().diagonal()
         for a in I:
-            if a.is_odd():
+            if is_odd(a):
                 return False
         return True
 
@@ -303,7 +304,7 @@ class Lattice_class (SageObject):
             return self.__chi[t]
         l = self.shadow_level()
         z = QQbar.zeta(l)
-        w = QQbar(sqrt(self.det()))
+        w = QQbar(self.det().sqrt())
         V = self.values()
         self.__chi[t] = sum(len(V[a])*z**(t*a) for a in V)/w
         return self.__chi[t]

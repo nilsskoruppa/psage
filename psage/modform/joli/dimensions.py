@@ -17,8 +17,10 @@ _VERSION = '$Id$'
 
 from sage.rings.integer import Integer
 from sage.rings.qqbar import QQbar
+from sage.rings.rational import Rational
 
-def dim_Jac( k, L, h):
+
+def dim_Joli( k, L, h):
     """
     Return the dimension of the space $J_{k,L}(\varepsilon^h)$.
 
@@ -50,13 +52,13 @@ def dim_Jac( k, L, h):
     scal = (L.det() + len(V2) * (-1)**(g+o_inv)) * (k-n/2-1)/24
 
     # elliptic S-term
-    ell_S = (L.chi(2) * QQbar.zeta(4)**g).real()/4 + QQ(Integer(12).kronecker(2*g+2*n+1))/6
+    ell_S = (L.chi(2) * QQbar.zeta(4)**g).real()/4 + Rational(Integer(12).kronecker(2*g+2*n+1))/6
 
     # elliptic R-term
     ell_R = (L.chi(-3) * QQbar.zeta(24)**(n+2) * QQbar.zeta(6)**g).real() * (-1)**g/QQbar(27).sqrt()
     
     # parabolic term
-    B = lambda t: t - t.floor() - QQ(1)/2
+    B = lambda t: t - t.floor() - Rational(1)/2
     par = -sum( B(h/24-L.beta(x)) for x in V)/2
     par -= (-1)**(g+o_inv) * sum(B(h/24-L.beta(x)) for x in V2)/2
 
