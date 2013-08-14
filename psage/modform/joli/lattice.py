@@ -13,13 +13,14 @@ in the context of Jacobi forms of lattice index over $Q$.
 _VERSION = '$Id$'
 
 
-from psage.modules.finite_quadratic_module import *
-
-# load '/home/nils/Sandbox/Articles/Present/Joli-I/Computations/lattice_data.sage'
-
-from sage.all import *
-
-sage.misc.preparser.load(sage.misc.preparser.base64.b64decode("Jy9ob21lL25pbHMvU2FuZGJveC9BcnRpY2xlcy9QcmVzZW50L0pvbGktSS9Db21wdXRhdGlvbnMvbGF0dGljZV9kYXRhLnNhZ2Un"),globals(),False)
+from sage.structure.sage_object import SageObject
+from psage.modules.finite_quadratic_module import FiniteQuadraticModule
+from sage.rings.integer import Integer
+from sage.rings.integer_ring import IntegerRing
+from sage.rings.arith import is_square, lcm
+from sage.misc.functional import isqrt
+from sage.matrix.constructor import matrix, Matrix, vector
+from sage.rings.qqbar import QQbar
 
 
 class Lattice_class (SageObject):
@@ -70,7 +71,7 @@ class Lattice_class (SageObject):
         n = Integer( (-1+isqrt(1+8*N))/2)
         self.__rank = n
         # We set up the Gram matrix
-        self.__G = matrix( ZZ, n, n)
+        self.__G = matrix( IntegerRing(), n, n)
         i = j = 0
         for a in q:
             self.__G[i,j] = self.__G[j,i] = a
@@ -89,7 +90,7 @@ class Lattice_class (SageObject):
         # We compute a shadow vector
         self.__shadow_vector = vector((a%2)/2 for a in self.__G.diagonal())*Gi
         # We define a basis
-        M = Matrix( ZZ, n, n, 1)
+        M = Matrix( IntegerRing(), n, n, 1)
         self.__basis = M.rows()
         # We prepare a cache
         self.__dual_vectors = None
@@ -128,7 +129,7 @@ class Lattice_class (SageObject):
     def is_even( self):
         I = self.gram_matrix().diagonal()
         for a in I:
-            if is_odd(a):
+            if a.is_odd():
                 return False
         return True
 
@@ -155,8 +156,8 @@ class Lattice_class (SageObject):
         if self.is_even():
             return self.level()
         s = self.a_shadow_vector()
-        N = denominator((s*self.gram_matrix()*s)/2)
-        h = lcm([denominator(x) for x in s])
+        N = ((s*self.gram_matrix()*s)/2).denominator()
+        h = lcm( [x.denominator() for x in s])
         return lcm( [h, N, self.level()])
 
 
@@ -326,7 +327,7 @@ class Lattice_class (SageObject):
             and $2e_j$, where $j$ is any fixed index in $S$.
         """
         if self.is_even():
-            return matrix( ZZ, self.rank(), self.rank(), 1), self
+            return matrix( IntegerRing(), self.rank(), self.rank(), 1), self
         D = self.gram_matrix().diagonal()
         S = [ i for i in range( len(D)) if is_odd(D[i])]
         j = min(S)
@@ -361,12 +362,12 @@ class Lattice_class (SageObject):
         """
         def cs_range( f, subset = None):
             """
-            For a symmetric semi-positive integral matrix $F$,
+            For a symmetric semi-positive integral matrix $f$,
             return a list of all integral $n$-vectors $v$ such that
             $x^tfx - (v*x)^2 >= 0$ for all $x$.
             """
             n = f.dimensions()[0]
-            b = vector( isqrt(s) for s in f.diagonal())
+            b = vector( s.isqrt() for s in f.diagonal())
             zv = vector([0]*n)
             box = [b - vector(t) for t in mrange( (2*b + vector([1]*n)).list()) if b - vector(t) > zv]
             if subset:
