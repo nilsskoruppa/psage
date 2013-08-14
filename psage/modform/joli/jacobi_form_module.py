@@ -11,6 +11,8 @@ _VERSION = '$Id$'
 
 import dimensions
 from sage.rings.integer import Integer
+from sage.rings.integer_ring import IntegerRing
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.structure.sage_object import SageObject
 from sage.rings.big_oh import O
 
@@ -34,7 +36,6 @@ class JoliModule_class (SageObject):
         self.__uterm = uterm
         n = L.rank()
         self.__special_weight = n/2 + ((h - n + 2*self.__par)%4)/2
-        self.__Poincare_pol = None
 
     
     def _latex_( self):
@@ -73,6 +74,7 @@ class JoliModule_class (SageObject):
         self.__uterm = d
 
 
+    @cached_method
     def dimension( self, k):
         try:
             t = Integer((k - self.special_weight())/2)
@@ -87,7 +89,7 @@ class JoliModule_class (SageObject):
             return dimensions.dim_Joli( k, self.index(), self.character())
 
 
-    def Poincare_pol( self, x, uterm = 0):
+    def Poincare_pol( self, var = 'x', uterm = 0):
         """
         Return $s$ and the polynomial $p(x)$ such that
         \[
@@ -110,21 +112,35 @@ class JoliModule_class (SageObject):
            Note that we only have dimension formulas for weights $k \ge n/2 + 2$.
            Accordingly, to have a correct result, one should input uterm
            equal to the dimension of $J_{s,L}(\varepsilon^h)$.
+
+        IMPLEMENTATION
+           We use the Supplement to Theorem 4.1 in
+           Boylan, H. and Skoruppa, N-P.: Jacobi forms of lattice index. I: Basic Theory.
+           Namely, the Poincare polynomial has always degree $< n/2 + 12$, where
+           $n$ is the rank of $self.index()$.
         """
-        if self.__Poincare_pol:
-            return self.__Poincare_pol
-
-        L = self.index()
-        h = self.character()
+        n  = self.index().rank()
         s = self.special_weight()
-        N = 50 #TODO: does 13 suffice?
-        P = uterm + sum( self.dimension( s + 2*k) * x**(2*k) for k in range( 1, N)) + O(x**N)
-        P *= (1-x**4)*(1-x**6)
+        v = PolynomialRing( IntegerRing(), var).gens()[0]
+        a = dict([ (s+l,self.dimension(s+l)) for l in range(-10,n/2+12-s,2) if l != 0])
+        a[s] = uterm
+        Poincare_pol = s,\
+            sum( (a[s+l]-a[s+l-4]-a[s+l-6]+a[s+l-10])* v**l for l in range(0,n/2+12-s,2))
 
-        self.__Poincare_pol = s, P.truncate()
-        return self.__Poincare_pol
+        # L = self.index()
+        # h = self.character()
+        # s = self.special_weight()
+        # N = 50 #TODO: does 13 suffice?
+        # P = uterm + sum( self.dimension( s + 2*k) * x**(2*k) for k in range( 1, N)) + O(x**N)
+        # P *= (1-x**4)*(1-x**6)
+        # Poincare_pol = s, P.truncate()
+
+        return Poincare_pol
 
 
 
 def JoliModule( L, h, parity = 'odd', uterm = None):
+    """
+    Return an instance of class JoliModule_class.
+    """
     return JoliModule_class( L, h, parity = parity, uterm = uterm)

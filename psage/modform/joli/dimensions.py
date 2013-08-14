@@ -30,7 +30,6 @@ def dim_Joli( k, L, h):
        h -- an integer
     """
     h = Integer(h)
-    k = Integer(k)
     g = k - h/2
     try:
         g = Integer(g)
@@ -46,7 +45,7 @@ def dim_Joli( k, L, h):
     if k < n/2:
         return Integer(0)
     if n/2 <= k and k < 2+n/2:
-        raise NotImplementedError( 'weight %d: not yet implemented'%k)
+        raise NotImplementedError( 'special weight %s: not yet implemented'%k)
 
     # scalar term
     scal = (L.det() + len(V2) * (-1)**(g+o_inv)) * (k-n/2-1)/24
