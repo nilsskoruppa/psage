@@ -247,7 +247,8 @@ class Lattice_class (SageObject):
         $2s$ is in $L$ (so that $(-1)^parity = e(G[2*s]/2)$.
         
         REMARK
-            The o_invariant equals the parity of the Gram matrix. 
+            The o_invariant equals the parity of $n_2$, where
+            $n_2$ is as in Lemma 3.1 of [Joli-I].
         """
         V = self.shadow_vectors_of_order_2()
         s = V[0]

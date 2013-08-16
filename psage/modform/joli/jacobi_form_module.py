@@ -15,7 +15,8 @@ from sage.rings.integer_ring import IntegerRing
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.structure.sage_object import SageObject
 from sage.rings.big_oh import O
-
+from sage.misc.cachefunc import cached_method
+from sage.rings.rational import Rational
 
 class JoliModule_class (SageObject):
     """
@@ -65,6 +66,7 @@ class JoliModule_class (SageObject):
 
 
     def rank( self):
+        L = self.index()
         o_inv = L.o_invariant()
         V2 = L.shadow_vectors_of_order_2()
         return Integer( (L.det() + len(V2)*(-1)**(self.__par + o_inv))/2)
@@ -122,10 +124,11 @@ class JoliModule_class (SageObject):
         n  = self.index().rank()
         s = self.special_weight()
         v = PolynomialRing( IntegerRing(), var).gens()[0]
-        a = dict([ (s+l,self.dimension(s+l)) for l in range(-10,n/2+12-s,2) if l != 0])
+        top = Rational(n/2+12-s).ceil()
+        a = dict([ (s+l,self.dimension(s+l)) for l in range(-10,top,2) if l != 0])
         a[s] = uterm
         Poincare_pol = s,\
-            sum( (a[s+l]-a[s+l-4]-a[s+l-6]+a[s+l-10])* v**l for l in range(0,n/2+12-s,2))
+            sum( (a[s+l]-a[s+l-4]-a[s+l-6]+a[s+l-10])* v**l for l in range(0,top,2))
 
         # L = self.index()
         # h = self.character()
