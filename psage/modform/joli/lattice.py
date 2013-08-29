@@ -22,11 +22,22 @@ from sage.misc.functional import isqrt, is_odd
 from sage.matrix.constructor import matrix, Matrix, vector
 from sage.rings.qqbar import QQbar
 from sage.misc.mrange import mrange
+from sage.modules.free_module import FreeModule
 
 
 class Lattice_class (SageObject):
     """
     A class representing a lattice $L$.
+
+    NOTE
+        We build this class as a sort of wrapper
+        around \code{FreeModule(ZZ,n)}.
+        This is reflecting the fact that
+        a lattice is not a free module, but a pair
+        consisting of a free module and a scalar product.
+        In addition, we avoid in this way to add new
+        items to the Sage category system, which we
+        better leave to the specialists.
 
     EXAMPLES
         sage: L = Lattice_class( [2,1,2]); L
@@ -75,7 +86,7 @@ class Lattice_class (SageObject):
         self.__G = matrix( IntegerRing(), n, n)
         i = j = 0
         for a in q:
-            self.__G[i,j] = self.__G[j,i] = a
+            self.__G[i,j] = self.__G[j,i] = Integer(a)
             if j < n-1:
                 j += 1
             else:
@@ -88,11 +99,14 @@ class Lattice_class (SageObject):
         I = Gi.diagonal()
         b =  lcm( map( lambda x: (x/2).denominator(), I))
         self.__level = lcm( a, b)
+        # We define the undelying module and the ambient space
+        self.__module = FreeModule( IntegerRing(), n)
+        self.__space = self.__module.ambient_vector_space()
         # We compute a shadow vector
-        self.__shadow_vector = vector((a%2)/2 for a in self.__G.diagonal())*Gi
+        self.__shadow_vector = self.__space([(a%2)/2 for a in self.__G.diagonal()])*Gi
         # We define a basis
         M = Matrix( IntegerRing(), n, n, 1)
-        self.__basis = M.rows()
+        self.__basis = self.__module.basis()
         # We prepare a cache
         self.__dual_vectors = None
         self.__values = None
@@ -119,8 +133,32 @@ class Lattice_class (SageObject):
         return self.__level
 
 
-    def _basis( self):
+    def basis( self):
         return self.__basis
+
+
+    def module( self):
+        """
+        Return the underlying module.
+        """
+        return self.__module
+
+
+    def hom( self, im_gens, codomain=None, check=True):
+        # return self.module().hom( im_gens, codomain = codomain, check = check)
+        if not codomain:
+            raise NotImplementedError()
+        A = matrix( im_gens)
+        if codomain and True == check:
+            assert self.gram_matrix() == A*codomain.gram_matrix()*A.transpose()
+        return Embedding( self, matrix( im_gens), codomain) 
+
+
+    def space( self):
+        """
+        Return the ambient vector space.
+        """
+        return self.__space
 
 
     def is_positive( self):
@@ -157,7 +195,7 @@ class Lattice_class (SageObject):
         if self.is_even():
             return self.level()
         s = self.a_shadow_vector()
-        N = ((s*self.gram_matrix()*s)/2).denominator()
+        N = self.beta(s).denominator()
         h = lcm( [x.denominator() for x in s])
         return lcm( [h, N, self.level()])
 
@@ -186,7 +224,8 @@ class Lattice_class (SageObject):
         # hence D = U * self.gram_matrix() * V
         if None == self.__dual_vectors:
             W = V*D**-1
-            self.__dual_vectors = [ W*vector(v) for v in mrange( D.diagonal())]
+            S = self.space()
+            self.__dual_vectors = [ W*S(v) for v in mrange( D.diagonal())]
         return self.__dual_vectors
 
 
@@ -258,7 +297,7 @@ class Lattice_class (SageObject):
     def values( self):
         """
         Return a dictionary
-        N \mapsto Set of representatives r in $L^\bullet/L$ which satisfy
+        N \mapsto set of representatives r in $L^\bullet/L$ which satisfy
         $\beta(r) \equiv n/l \bmod \ZZ$, where $l$ is the shadow_level
         (i.e. the level of $L_ev$).
 
@@ -276,7 +315,7 @@ class Lattice_class (SageObject):
                 s = self.a_shadow_vector()
                 R = [s+r for r in R]
             for r in R:
-                N = Integer((r*G*r)*l/2)
+                N = Integer( self.beta(r)*l)
                 N = N%l
                 if not self.__values.has_key(N):
                     self.__values[N] = [r]
@@ -313,11 +352,11 @@ class Lattice_class (SageObject):
 
     def ev( self):
         """
-        Return the pair $a, L_{ev}$, where $L_{ev}$
-        is the kernel of $L\rightarrow \{\pm 1\}$, 
+        Return a pair $alpha, L_{ev}$, where $L_{ev}$
+        is isomorphic to the kernel of $L\rightarrow \{\pm 1\}$, 
         $x\mapsto e(\beta(x))$,
-        and where $a$ are the vectors in $L$ which
-        correspond to the canonical basis for $L_{ev}$.
+        and where $alpha$ is an embedding of $L_{ev}$ into $L$
+        whose image is this kernel.
 
         REMARK
             We have to find the kernel of the map
@@ -329,16 +368,19 @@ class Lattice_class (SageObject):
             and $2e_j$, where $j$ is any fixed index in $S$.
         """
         if self.is_even():
-            return matrix( IntegerRing(), self.rank(), self.rank(), 1), self
+            return self.hom( self.basis(), self.module()), self
         D = self.gram_matrix().diagonal()
         S = [ i for i in range( len(D)) if is_odd(D[i])]
         j = min(S)
-        e = self._basis()
+        e = self.basis()
         n = len(e)
         form = lambda i: e[i] if i not in S else 2*e[j] if i == j else e[i]+e[j] 
         a = [ form(i) for i in range( n)]
-        A = matrix( a).transpose()
-        return A, Lattice_class( [ self.beta( a[i],a[j]) for i in range(n) for j in range(i,n)])
+        # A = matrix( a).transpose()
+        # return A, Lattice_class( [ self.beta( a[i],a[j]) for i in range(n) for j in range(i,n)])
+        Lev = Lattice_class( [ self.beta( a[i],a[j]) for i in range(n) for j in range(i,n)])
+        alpha = Lev.hom( a, self.module()) 
+        return alpha, Lev
  
 
     def fqm( self):
@@ -395,7 +437,9 @@ class Lattice_class (SageObject):
                         res.append( e.insert_row(0, v))
             return res 
 
-        return embs( self.gram_matrix())
+        l_embs = embs( self.gram_matrix())
+        import lattice_index
+        return map( lambda a: self.hom( a.columns(), lattice_index.LatticeIndex( 'Z^'+ str(a.nrows()))), l_embs)
 
 
     def vectors_in_shell ( self, bound, max = 10000):
@@ -404,7 +448,8 @@ class Lattice_class (SageObject):
         modulo multiplication by $-1$ such that
         $\beta(x) <= bound$.
         """
-        return self._vectors_in_shell ( self.gram_matrix(), 2*bound, max)
+        M = self.module()
+        return map( lambda x: M(x), self._vectors_in_shell ( self.gram_matrix(), 2*bound, max))
 
 
     def dual_vectors_in_shell ( self, bound, max = 10000):
@@ -415,7 +460,8 @@ class Lattice_class (SageObject):
         """
         l = self.level()
         F = l*self.__Gi
-        return map( lambda x: self.__Gi*x, self._vectors_in_shell ( F, 2*l*bound, max))
+        S = self.space()
+        return map( lambda x: S(self.__Gi*x), self._vectors_in_shell ( F, 2*l*bound, max))
 
 
     def shadow_vectors_in_shell (self, bound, max = 10000):
@@ -428,7 +474,8 @@ class Lattice_class (SageObject):
             return self.dual_vectors_in_shell ( bound, max)
         a, Lev = L.ev()
         l = Lev.dual_vectors_in_shell ( bound, max)
-        return filter( lambda x: self.is_in_shadow(x) ,[a*y for y in l])
+        A = a.matrix()
+        return filter( lambda x: self.is_in_shadow(x) ,[y*A for y in l])
 
 
     @staticmethod
@@ -436,7 +483,8 @@ class Lattice_class (SageObject):
         """
         For an (integral) positive symmetric matrix $F$
         return a list of vectors such that $x^tFx <= bound$.
-        The method returns only nonzero vestors and for each pair $v$ and $-v$
+        The method returns only nonzero vectors
+        and for each pair $v$ and $-v$
         only one.
 
         NOTE
@@ -457,3 +505,27 @@ class Lattice_class (SageObject):
             if c.denominator() > 1:
                 return False
         return True
+
+
+
+from sage.modules.free_module_morphism import FreeModuleMorphism
+from sage.categories.homset import Hom
+
+class Embedding (FreeModuleMorphism):
+    def __init__(self, L, A, M):
+        self.__l_lattice = L
+        self.__r_lattice = M
+        X = Hom( L.module(), M.module())
+        super( Embedding, self).__init__( X, A)
+
+    def l_lattice( self):
+        return self.__l_lattice
+
+    def r_lattice( self):
+        return self.__r_lattice
+
+    def _repr_( self):
+        r = "Free module morphism defined by the matrix\n{0}\nDomain: {1}\nCodomain: {2}"
+        return r.format(self.matrix(), self.l_lattice(), self.r_lattice())
+
+    
