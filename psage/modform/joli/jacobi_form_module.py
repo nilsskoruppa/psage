@@ -86,7 +86,7 @@ class JoliModule_class (SageObject):
             return Integer(0)
         elif self.special_weight() == k:
             if self.__uterm: return self.__uterm
-            else: raise NotImplementedError( 'weight %d: not implemented'%k)
+            else: raise NotImplementedError( 'weight %s: not implemented'%k)
         else:
             return dimensions.dim_Joli( k, self.index(), self.character())
 
