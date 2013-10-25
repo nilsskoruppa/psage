@@ -445,8 +445,7 @@ class Lattice_class (SageObject):
     def vectors_in_shell ( self, bound, max = 10000):
         """
         Return the list of all $x\not=0$ in self
-        modulo multiplication by $-1$ such that
-        $\beta(x) <= bound$.
+        such that $\beta(x) <= bound$.
         """
         M = self.module()
         return map( lambda x: M(x), self._vectors_in_shell ( self.gram_matrix(), 2*bound, max))
@@ -455,8 +454,7 @@ class Lattice_class (SageObject):
     def dual_vectors_in_shell ( self, bound, max = 10000):
         """
         Return the list of all $x\not=0$ in the dual of self
-        modulo multiplication by $-1$ such that
-        $\beta(x) <= bound$.
+        such that $\beta(x) <= bound$.
         """
         l = self.level()
         F = l*self.__Gi
@@ -467,8 +465,7 @@ class Lattice_class (SageObject):
     def shadow_vectors_in_shell (self, bound, max = 10000):
         """
         Return the list of all $x\not=0$ in the bullet of self
-        modulo multiplication by $-1$ such that
-        $\beta(x) <= bound$.
+        such that $\beta(x) <= bound$.
         """
         if self.is_even():
             return self.dual_vectors_in_shell ( bound, max)
@@ -496,7 +493,11 @@ class Lattice_class (SageObject):
         po = p.qfminim( bound, max, flag = 0).sage()
         if max == po[0]:
             raise ArithmeticError( 'Increase max')
-        return po[2].columns()
+        ves = [vector([0]*F.nrows())]
+        for x in po[2].columns():
+            ves += [x,-x]
+        # return po[2].columns()
+        return ves
 
     
     @staticmethod
