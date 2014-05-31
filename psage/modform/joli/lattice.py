@@ -383,6 +383,15 @@ class Lattice_class (SageObject):
         return alpha, Lev
  
 
+    def twist( self, a):
+        """
+        Return the lattice self rescaled by the integer $a$.
+        """
+        e = self.basis()
+        n = len(e)
+        return Lattice_class( [ a*self.beta( e[i],e[j]) for i in range(n) for j in range(i,n)])
+        
+
     def fqm( self):
         """
         Return a pair $(f,M)$, where $M$ is the discriminant module
